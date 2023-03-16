@@ -302,14 +302,14 @@ function App() {
             type="button"
             name="previous"
             className="disabled previous action-button"
-            value="⮜ Natrag"
+            value="Natrag"
             disabled=""
           />
           <input
             type="button"
             name="next"
             className="next action-button"
-            value="Nastavi ⮞"
+            value="Nastavi"
             onClick={handleNext}
             onChange={hideCanvas}
           />
@@ -327,10 +327,10 @@ function App() {
             type="button"
             name="previous"
             className="previous action-button"
-            value="⮜ Natrag"
+            value="Natrag"
             onClick={handlePrevious}
           />
-          <input type="button" name="next" className="next action-button" value="Nastavi ⮞" onClick={handleNext} />
+          <input type="button" name="next" className="next action-button" value="Nastavi" onClick={handleNext} />
         </fieldset>
         <fieldset id="step-3" className={current_fs === 3 ? "active" : ""}>
           <h2 className="fs-title">Podaci o uplati</h2>
@@ -381,11 +381,11 @@ function App() {
             type="button"
             name="previous"
             className="previous action-button"
-            value="⮜ Natrag"
+            value="Natrag"
             onClick={handlePrevious}
           />
           <a className="submit action-button" target="_top" onClick={generateBarcode}>
-            GENERIRAJ ⮛
+            GENERIRAJ
           </a>
         </fieldset>
       </form>
