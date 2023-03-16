@@ -121,7 +121,7 @@ function App() {
       fontFamily = "montserrat, arial, verdana",
       color = "#D7263D",
       textAlign = "left",
-      textBaseline = "top",
+      textBaseline = "top"
     } = style;
 
     ctx.beginPath();
@@ -317,13 +317,7 @@ function App() {
             <input id="zip_r" className="zip" type="text" name="zip_r" placeholder="Po. br." onChange={hideCanvas} />
             <input id="city_r" type="text" name="city_r" placeholder="Grad" onChange={hideCanvas} />
           </div>
-          <input
-            type="button"
-            name="previous"
-            className="previous action-button"
-            value="⮜"
-            onClick={handlePrevious}
-          />
+          <input type="button" name="previous" className="previous action-button" value="⮜" onClick={handlePrevious} />
           <input type="button" name="next" className="next action-button" value="Nastavi" onClick={handleNext} />
         </fieldset>
         <fieldset id="step-3" className={current_fs === 3 ? "active" : ""}>
@@ -371,13 +365,7 @@ function App() {
             <input id="c2n" type="text" name="c2n" placeholder="Poziv na broj" onChange={hideCanvas} />
           </div>
           <textarea id="desc" name="desc" placeholder="Opis plaćanja" onChange={hideCanvas}></textarea>
-          <input
-            type="button"
-            name="previous"
-            className="previous action-button"
-            value="⮜"
-            onClick={handlePrevious}
-          />
+          <input type="button" name="previous" className="previous action-button" value="⮜" onClick={handlePrevious} />
           <a className="submit action-button" target="_top" onClick={generateBarcode}>
             GENERIRAJ
           </a>
