@@ -119,7 +119,7 @@ function App() {
     const {
       fontSize = 20,
       fontFamily = "montserrat, arial, verdana",
-      color = "red",
+      color = "#D7263D",
       textAlign = "left",
       textBaseline = "top",
     } = style;
