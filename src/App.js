@@ -121,7 +121,7 @@ function App() {
       fontFamily = "montserrat, arial, verdana",
       color = "#D7263D",
       textAlign = "left",
-      textBaseline = "top"
+      textBaseline = "top",
     } = style;
 
     ctx.beginPath();
