@@ -56,7 +56,7 @@ body {
 /*buttons*/
 #msform .action-button {
 	width: 100px;
-	background: #1B998B;
+	background: #71B340;
 	font-weight: bold;
 	color: white;
 	border: 0 none;
@@ -68,13 +68,13 @@ body {
   font-size: 14px;
 }
 #msform .action-button:hover, #msform .action-button:focus {
-	box-shadow: 0 0 0 2px white, 0 0 0 3px #1B998B;
+	box-shadow: 0 0 0 2px white, 0 0 0 3px #71B340;
 }
 #msform .previous.action-button {
 	background: #a4a4a4;
 }
 #msform .submit.action-button {
-	background: rgba(109, 70, 107, .9);
+	background: rgba(106, 76, 147, .9);
 }
 #msform .previous.action-button:hover, #msform .previous.action-button:focus {
 	box-shadow: 0 0 0 2px white, 0 0 0 3px #a4a4a4;
@@ -141,7 +141,7 @@ body {
 /*marking active/completed steps green*/
 /*The number of the step and the connector before it = green*/
 #progressbar li.active:before,  #progressbar li.active:after{
-	background: #1B998B;
+	background: #71B340;
 	color: white;
 }
 

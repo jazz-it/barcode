@@ -225,7 +225,7 @@ function App() {
       // get context of the canvas
       ctx = canvasEle.getContext("2d");
       canvas.style.display = "block";
-      writeText({ text: "Nepotpuni podaci!", x: 55, y: 10 });
+      writeText({ text: "Nepotpuni podaci!", x: 56, y: 10 });
     }
   };
 
