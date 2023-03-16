@@ -74,13 +74,13 @@ body {
 	background: #a4a4a4;
 }
 #msform .submit.action-button {
-	background: rgba(106, 76, 147, .9);
+	background: rgba(141, 59, 114, .9);
 }
 #msform .previous.action-button:hover, #msform .previous.action-button:focus {
 	box-shadow: 0 0 0 2px white, 0 0 0 3px #a4a4a4;
 }
 #msform .submit.action-button:hover, #msform .submit.action-button:focus {
-	box-shadow: 0 0 0 2px white, 0 0 0 3px rgba(155, 89, 182, 0.9);
+	box-shadow: 0 0 0 2px white, 0 0 0 3px rgba(141, 59, 114, .9);
 }
 /*headings*/
 .fs-title {
