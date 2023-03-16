@@ -298,7 +298,7 @@ function App() {
             <input id="zip_s" className="zip" type="text" name="zip_s" placeholder="Po. br." onChange={hideCanvas} />
             <input id="city_s" type="text" name="city_s" placeholder="Grad" onChange={hideCanvas} />
           </div>
-          <input type="button" name="previous" className="disabled previous action-button" value="Natrag" disabled="" />
+          <input type="button" name="previous" className="disabled previous action-button" value="⮜" disabled="" />
           <input
             type="button"
             name="next"
@@ -321,7 +321,7 @@ function App() {
             type="button"
             name="previous"
             className="previous action-button"
-            value="Natrag"
+            value="⮜"
             onClick={handlePrevious}
           />
           <input type="button" name="next" className="next action-button" value="Nastavi" onClick={handleNext} />
@@ -375,7 +375,7 @@ function App() {
             type="button"
             name="previous"
             className="previous action-button"
-            value="Natrag"
+            value="⮜"
             onClick={handlePrevious}
           />
           <a className="submit action-button" target="_top" onClick={generateBarcode}>
