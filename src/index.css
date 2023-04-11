@@ -201,4 +201,12 @@ canvas {
 #msform input:out-of-range,
 #msform textarea:invalid {
   border-color: rgba(141, 59, 114, .9);
+  animation: shake 0.3s 2;
+  background-color: -internal-light-dark(rgb(254, 232, 240), rgba(126, 70, 90, 0.4)) !important;
+}
+
+@keyframes shake {
+	0% {transform: translateX(4px);}
+	50% {transform: translateX(-4px);}
+	100% {transform: translateX(4px);}
 }
