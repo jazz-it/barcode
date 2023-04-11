@@ -140,21 +140,21 @@ function App() {
   };
 
   const generateBarcode = async () => {
-    const name_s = document.getElementById("name_s").value.toUpperCase();
-    const address_s = document.getElementById("address_s").value.toUpperCase();
-    const zip_s = document.getElementById("zip_s").value.toUpperCase();
-    const city_s = document.getElementById("city_s").value.toUpperCase();
-    const name_r = document.getElementById("name_r").value.toUpperCase();
-    const address_r = document.getElementById("address_r").value.toUpperCase();
-    const zip_r = document.getElementById("zip_r").value.toUpperCase();
-    const city_r = document.getElementById("city_r").value.toUpperCase();
-    let value = document.getElementById("value").value.toUpperCase();
-    const currency = document.getElementById("currency").value.toUpperCase() || "EUR";
-    const iban = document.getElementById("iban").value.toUpperCase();
-    const code = document.getElementById("code").value.toUpperCase() || "COST";
-    const model = document.getElementById("model").value.toUpperCase() || "HR00";
-    const c2n = document.getElementById("c2n").value.toUpperCase();
-    const desc = document.getElementById("desc").value.toUpperCase();
+    const name_s = document.getElementById("name_s").value.trim().toUpperCase();
+    const address_s = document.getElementById("address_s").value.trim().toUpperCase();
+    const zip_s = document.getElementById("zip_s").value.trim().toUpperCase();
+    const city_s = document.getElementById("city_s").value.trim().toUpperCase();
+    const name_r = document.getElementById("name_r").value.trim().toUpperCase();
+    const address_r = document.getElementById("address_r").value.trim().toUpperCase();
+    const zip_r = document.getElementById("zip_r").value.trim().toUpperCase().match(/\d/g).join("");
+    const city_r = document.getElementById("city_r").value.trim().toUpperCase();
+    let value = document.getElementById("value").value.trim().toUpperCase();
+    const currency = document.getElementById("currency").value.trim().toUpperCase() || "EUR";
+    const iban = document.getElementById("iban").value.trim().toUpperCase();
+    const code = document.getElementById("code").value.trim().toUpperCase() || "COST";
+    const model = document.getElementById("model").value.trim().toUpperCase() || "HR00";
+    const c2n = document.getElementById("c2n").value.trim().toUpperCase();
+    const desc = document.getElementById("desc").value.trim().toUpperCase();
 
     value = value.replace(/\D/g, "");
     let s = "00000000000000" + value;
@@ -193,24 +193,7 @@ function App() {
       desc +
       "\n";
 
-    if (
-      canvas &&
-      name_s &&
-      address_s &&
-      zip_s &&
-      city_s &&
-      name_r &&
-      address_r &&
-      zip_r &&
-      city_r &&
-      value &&
-      currency &&
-      iban &&
-      code &&
-      model &&
-      c2n &&
-      desc
-    ) {
+    if (canvas && name_r && address_r && zip_r && city_r && value && currency && iban && code && desc) {
       PDF417.draw(barcode, canvas, 2.667, 6, 2);
       console.log(barcode);
       canvas.style.display = "block";
@@ -311,11 +294,44 @@ function App() {
         <fieldset id="step-2" className={current_fs === 2 ? "active" : ""}>
           <h2 className="fs-title">Primatelj</h2>
           <h3 className="fs-subtitle">Kome se uplaćuje?</h3>
-          <input id="name_r" type="text" name="name_r" placeholder="Ime i prezime" onChange={hideCanvas} />
-          <input id="address_r" type="text" name="adress_r" placeholder="Adresa" onChange={hideCanvas} />
+          <input
+            id="name_r"
+            type="text"
+            name="name_r"
+            placeholder="Ime i prezime"
+            onChange={hideCanvas}
+            required
+            pattern="^[^<>%$]+$"
+          />
+          <input
+            id="address_r"
+            type="text"
+            name="adress_r"
+            placeholder="Adresa"
+            onChange={hideCanvas}
+            required
+            pattern="^[^<>%$]+$"
+          />
           <div className="side-by-side">
-            <input id="zip_r" className="zip" type="text" name="zip_r" placeholder="Po. br." onChange={hideCanvas} />
-            <input id="city_r" type="text" name="city_r" placeholder="Grad" onChange={hideCanvas} />
+            <input
+              id="zip_r"
+              className="zip"
+              type="text"
+              name="zip_r"
+              placeholder="Po. br."
+              onChange={hideCanvas}
+              required
+              pattern="^[0-9]{5}$"
+            />
+            <input
+              id="city_r"
+              type="text"
+              name="city_r"
+              placeholder="Grad"
+              onChange={hideCanvas}
+              required
+              pattern="^[^<>%$]+$"
+            />
           </div>
           <input
             type="button"
@@ -338,6 +354,8 @@ function App() {
               placeholder="Iznos"
               value={number || ""}
               onChange={handleChange}
+              required
+              pattern="^[0-9\.\,]+$"
             />
             <input
               id="currency"
@@ -346,6 +364,8 @@ function App() {
               defaultValue="EUR"
               placeholder="Valuta"
               onChange={hideCanvas}
+              required
+              pattern="^([eE][uU][rR])|([hH][rR][kK])$"
             />
           </div>
           <div className="side-by-side">
@@ -356,6 +376,8 @@ function App() {
               placeholder="IBAN"
               style={inputStyle("isIBANValid")}
               onChange={handleIBAN}
+              required
+              pattern="^([hH][rR])([0-9]{19})$"
             />
             <input
               id="code"
@@ -364,13 +386,36 @@ function App() {
               placeholder="Šifra"
               defaultValue={selectedKey || "COST"}
               onChange={hideCanvas}
+              pattern="^[a-zA-Z]{4}$"
             />
           </div>
           <div className="side-by-side">
-            <input id="model" type="text" name="model" defaultValue="HR00" placeholder="Model" onChange={hideCanvas} />
-            <input id="c2n" type="text" name="c2n" placeholder="Poziv na broj" onChange={hideCanvas} />
+            <input
+              id="model"
+              type="text"
+              name="model"
+              defaultValue="HR00"
+              placeholder="Model"
+              onChange={hideCanvas}
+              pattern="^([hH][rR])([0-9]{2})$"
+            />
+            <input
+              id="c2n"
+              type="text"
+              name="c2n"
+              placeholder="Poziv na broj"
+              onChange={hideCanvas}
+              pattern="^([0-9\-\s]+)$"
+            />
           </div>
-          <textarea id="desc" name="desc" placeholder="Opis plaćanja" onChange={hideCanvas}></textarea>
+          <textarea
+            id="desc"
+            name="desc"
+            placeholder="Opis plaćanja"
+            onChange={hideCanvas}
+            required
+            pattern="^[^<>%$]+$"
+          ></textarea>
           <input
             type="button"
             name="previous"

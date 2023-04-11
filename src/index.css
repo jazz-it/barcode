@@ -191,3 +191,14 @@ canvas {
 	box-sizing: border-box;
 	display: none;
 }
+
+#msform input:valid,
+#msform input:in-range,
+#msform textarea:valid {
+  border-color: #71B340;
+}
+#msform input:invalid,
+#msform input:out-of-range,
+#msform textarea:invalid {
+  border-color: rgba(141, 59, 114, .9);
+}
