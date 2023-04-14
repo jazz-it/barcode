@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import allowedValues from "./allowedValues.json";
 import importScript from "./importScript";
 
 function App() {
@@ -9,28 +10,57 @@ function App() {
   const fieldsets = useRef(document.querySelectorAll("fieldset"));
   const [selectedKey, setSelectedKey] = useState(null);
   const [isInputValid, setIsInputValid] = useState(true);
+  const inputRef = useRef(null);
+  // prettier-ignore
+  const defaultPattern = "^([0-9A-Za-zŠĐČĆŽšđčćž,.:+?'/)( -]+)$";
   let currentIndex = 0;
+  let stepIssues = 0;
+  let isValid = true;
 
   const handleScriptLoad = () => {
     setIsScriptLoaded(true);
   };
 
   function showFieldset(index) {
-    console.log(currentIndex);
     fieldsets[currentIndex].classList.remove("active");
     fieldsets[index].classList.add("active");
     fieldsets[index].classList.show();
     currentIndex = index;
   }
 
+  function sanitizeInput(input) {
+    if (input.length > 0) {
+      return input.trim().toUpperCase().replace(/\n+/g, " ").replace(/  +/g, " ");
+    } else {
+      return "";
+    }
+  }
+
   function sanitizeIBAN(input) {
-    const regex = /^[A-Za-z]{2}\d{19,32}$/; //regex pattern for validating input
-    const sanitizedInput = input.toUpperCase(); //convert all lowercase to uppercase
+    var IBAN = require("fast-iban");
+    const regex = /^[A-Za-z]{2}\d{19,30}$/; //regex pattern for validating input
+    const sanitizedInput = sanitizeInput(input); //convert all lowercase to uppercase
+    if (regex.test(sanitizedInput) && IBAN.validateIBAN(sanitizedInput)) {
+      return true;
+    }
+    return false;
+  }
+
+  function sanitizeCode(input) {
+    return allowedValues.code.includes(input);
+  }
+
+  function sanitizeCurrency(input) {
+    return allowedValues.currency.includes(input);
+  }
+
+  function sanitizeDesc(input) {
+    const regex = new RegExp(`${defaultPattern.slice(0, -1)}{5,35}$`, "u"); //regex pattern for validating input
+    const sanitizedInput = sanitizeInput(input).slice(0, 35); //convert all newlines to spaces and set the max width
     if (regex.test(sanitizedInput)) {
       return true;
-    } else {
-      return false;
     }
+    return false;
   }
 
   const canvasRef = useRef(null);
@@ -54,10 +84,15 @@ function App() {
     let input = event.target.value;
 
     // Remove any non-digit characters
-    input = input.replace(/\D/g, "");
+    input = input.replace(/[\D]/g, "").replace(/^0+/, "");
 
     // Add decimal comma when input is longer than 2 digits
-    if (input.length > 2) {
+    // Format the input based on its length
+    if (input.length === 1) {
+      input = "0,0" + input;
+    } else if (input.length === 2) {
+      input = "0," + input;
+    } else if (input.length > 2) {
       input = input.slice(0, -2) + "," + input.slice(-2);
       let separatorIndex = 0;
       let last3 = "";
@@ -77,7 +112,7 @@ function App() {
     }
 
     setNumber(input);
-    hideCanvas();
+    event.target.value = input; // update the value of the input field
   };
 
   const handlePrevious = () => {
@@ -92,6 +127,7 @@ function App() {
     // show the next fieldset
     current_fs.style.display = "none";
     previous_fs.style.display = "block";
+    addCurrent((step - 1).toString());
 
     // De-activate current step on progressbar
     const progressbarLis = document.querySelectorAll("#progressbar li");
@@ -99,8 +135,15 @@ function App() {
     progressbarLis[currentIndex].classList.remove("active");
   };
 
-  const inputStyle = (element) => {
-    border: element ? "1px solid green" : "1px solid red";
+  const handleInput = (event) => {
+    let input = event.target;
+    if (input.checkValidity()) {
+      setIsInputValid(true);
+      event.target.classList.remove("input-invalid");
+    } else {
+      setIsInputValid(false);
+      event.target.classList.add("input-invalid");
+    }
   };
 
   const handleIBAN = (event) => {
@@ -108,8 +151,51 @@ function App() {
     let valid = sanitizeIBAN(input);
     if (valid) {
       setIsInputValid(true);
+      event.target.classList.remove("input-invalid");
     } else {
       setIsInputValid(false);
+      event.target.classList.add("input-invalid");
+    }
+  };
+
+  const handleDesc = (event) => {
+    let input = event.target.value;
+    let valid = sanitizeDesc(input);
+    if (valid) {
+      setIsInputValid(true);
+      event.target.classList.remove("input-invalid");
+    } else {
+      setIsInputValid(false);
+      event.target.classList.add("input-invalid");
+    }
+  };
+
+  const handleCode = (event) => {
+    const input = sanitizeInput(event.target.value);
+    if (sanitizeCode(input)) {
+      setIsInputValid(true);
+      event.target.classList.remove("input-invalid");
+    } else {
+      setIsInputValid(false);
+      event.target.classList.add("input-invalid");
+    }
+  };
+
+  const handleCurrency = (event) => {
+    const input = sanitizeInput(event.target.value);
+    if (sanitizeCurrency(input)) {
+      setIsInputValid(true);
+      event.target.classList.remove("input-invalid");
+    } else {
+      setIsInputValid(false);
+      event.target.classList.add("input-invalid");
+    }
+  };
+
+  const handleProgress = (event) => {
+    const step = event.target.closest("fieldset").id.replace(/[^0-9]/g, "");
+    if (step) {
+      checkStep(step);
     }
   };
 
@@ -139,26 +225,152 @@ function App() {
     }
   };
 
-  const generateBarcode = async () => {
-    const name_s = document.getElementById("name_s").value.trim().toUpperCase();
-    const address_s = document.getElementById("address_s").value.trim().toUpperCase();
-    const zip_s = document.getElementById("zip_s").value.trim().toUpperCase();
-    const city_s = document.getElementById("city_s").value.trim().toUpperCase();
-    const name_r = document.getElementById("name_r").value.trim().toUpperCase();
-    const address_r = document.getElementById("address_r").value.trim().toUpperCase();
-    const zip_r = document.getElementById("zip_r").value.trim().toUpperCase().match(/\d/g).join("");
-    const city_r = document.getElementById("city_r").value.trim().toUpperCase();
-    let value = document.getElementById("value").value.trim().toUpperCase();
-    const currency = document.getElementById("currency").value.trim().toUpperCase() || "EUR";
-    const iban = document.getElementById("iban").value.trim().toUpperCase();
-    const code = document.getElementById("code").value.trim().toUpperCase() || "COST";
-    const model = document.getElementById("model").value.trim().toUpperCase() || "HR00";
-    const c2n = document.getElementById("c2n").value.trim().toUpperCase();
-    const desc = document.getElementById("desc").value.trim().toUpperCase();
+  const addCurrent = (n) => {
+    // Remove any previously added styles that contain the ".stop-animation" class
+    const prevStyles = document.querySelectorAll(".stop-animation");
+    prevStyles.forEach((style) => {
+      style.remove();
+    });
+    const style = document.createElement("style");
+    style.classList.add("stop-animation");
+    style.innerHTML = "#progressbar li:nth-child(" + n + ")::before { animation: pulse 0.9s infinite; }";
+    document.head.appendChild(style);
+  };
+
+  const addAlert = (n) => {
+    const li = document.querySelector(`#progressbar li:nth-child(${n})`);
+    const beforeStyle = window.getComputedStyle(li, "::before").cssText;
+    li.style.setProperty("--before-style", li.style.cssText);
+    li.style.cssText = beforeStyle;
+    li.classList.add("stop-alert");
+  };
+
+  const removeAlert = (n) => {
+    const li = document.querySelector(`#progressbar li:nth-child(${n})`);
+    if (li) {
+      li.classList.remove("stop-alert");
+    }
+  };
+
+  const checkStep = (n) => {
+    // check if all required input elements are valid
+    const form = document.getElementById("msform");
+    const inputs = form.querySelectorAll(
+      "#step-" + n + " input[type='text']:not([id*='iban']):not([id*='code']):not([id*='currency'])"
+    ); // Select all inputs except id="iban"
+    stepIssues = 0;
+
+    for (let i = 0; i < inputs.length; i++) {
+      if (
+        (inputs[i].hasAttribute("required") && !inputs[i].checkValidity()) ||
+        (!inputs[i].hasAttribute("required") && !inputs[i].length && !inputs[i].checkValidity())
+      ) {
+        inputs[i].classList.add("input-invalid");
+        stepIssues = 1;
+        addAlert(n);
+      } else {
+        inputs[i].classList.remove("input-invalid");
+      }
+    }
+
+    if (n != 3) {
+      // if all is good in all steps before the last one
+      if (stepIssues == 0) {
+        removeAlert(n);
+      }
+    } else {
+      if (stepIssues == 0) {
+        // if all is good in the last step, proceed with additional validation
+        let currency = sanitizeInput(document.getElementById("currency").value);
+        let iban = sanitizeInput(document.getElementById("iban").value);
+        let code = sanitizeInput(document.getElementById("code").value);
+        let desc = sanitizeInput(document.getElementById("desc").value);
+
+        if (
+          !(
+            iban.length &&
+            sanitizeIBAN(iban) &&
+            code.length &&
+            sanitizeCode(code) &&
+            currency.length &&
+            sanitizeCurrency(currency) &&
+            desc.length &&
+            sanitizeDesc(desc)
+          )
+        ) {
+          stepIssues = 1;
+          addAlert(n);
+        } else {
+          // No issues within the step-3
+          removeAlert(n);
+          document.getElementById("currency").classList.remove("input-invalid");
+          document.getElementById("iban").classList.remove("input-invalid");
+          document.getElementById("code").classList.remove("input-invalid");
+          document.getElementById("desc").classList.remove("input-invalid");
+        }
+      }
+    }
+  };
+
+  const generateBarcode = async (event) => {
+    event.preventDefault(); // prevent default link behavior
+    isValid = true;
+
+    const name_s = sanitizeInput(document.getElementById("name_s").value);
+    const address_s = sanitizeInput(document.getElementById("address_s").value);
+    let zip_s = sanitizeInput(document.getElementById("zip_s").value);
+    const city_s = sanitizeInput(document.getElementById("city_s").value);
+    const name_r = sanitizeInput(document.getElementById("name_r").value);
+    const address_r = sanitizeInput(document.getElementById("address_r").value);
+    let zip_r = sanitizeInput(document.getElementById("zip_r").value);
+    const city_r = sanitizeInput(document.getElementById("city_r").value);
+    let value = sanitizeInput(document.getElementById("value").value);
+    const currency = sanitizeInput(document.getElementById("currency").value);
+    const iban = sanitizeInput(document.getElementById("iban").value);
+    let code = sanitizeInput(document.getElementById("code").value);
+    let model = sanitizeInput(document.getElementById("model").value);
+    const c2n = sanitizeInput(document.getElementById("c2n").value);
+    const desc = sanitizeInput(document.getElementById("desc").value);
+
+    // Setting defaults
+    if (!code) {
+      document.getElementById("code").value = "COST";
+      code = "COST";
+    }
+
+    if (!model) {
+      document.getElementById("model").value = "HR00";
+      model = "HR00";
+    }
+
+    checkStep(1);
+    if (stepIssues > 0) {
+      isValid = false;
+    }
+    checkStep(2);
+    if (stepIssues > 0) {
+      isValid = false;
+    }
+    checkStep(3);
+    if (stepIssues > 0) {
+      isValid = false;
+    }
 
     value = value.replace(/\D/g, "");
     let s = "00000000000000" + value;
     value = s.slice(s.length - 15);
+
+    if (!c2n.length) {
+      model = "";
+    }
+
+    if (zip_s.length > 0) {
+      zip_s = zip_s.match(/\d/g).join("");
+    }
+
+    if (zip_r.length > 0) {
+      zip_r = zip_r.match(/\d/g).join("");
+    }
 
     var barcode =
       "HRVHUB30\n" +
@@ -190,12 +402,11 @@ function App() {
       "\n" +
       code +
       "\n" +
-      desc +
+      desc.replace(/\n/g, " ").slice(0, 35) +
       "\n";
 
-    if (canvas && name_r && address_r && zip_r && city_r && value && currency && iban && code && desc) {
+    if (canvas && isValid) {
       PDF417.draw(barcode, canvas, 2.667, 6, 2);
-      console.log(barcode);
       canvas.style.display = "block";
     } else {
       // dynamically assign the width and height to canvas
@@ -230,6 +441,7 @@ function App() {
     // show the next fieldset
     current_fs.style.display = "none";
     next_fs.style.display = "block";
+    addCurrent((step + 1).toString());
 
     // hide the current fieldset with style
     let left, opacity, scale;
@@ -275,11 +487,63 @@ function App() {
         <fieldset id="step-1" className={current_fs === 1 ? "active" : ""}>
           <h2 className="fs-title">Platitelj</h2>
           <h3 className="fs-subtitle">Tko uplaćuje iznos?</h3>
-          <input id="name_s" type="text" name="name_s" placeholder="Ime i prezime" onChange={hideCanvas} />
-          <input id="address_s" type="text" name="adress_s" placeholder="Adresa" onChange={hideCanvas} />
+          <input
+            id="name_s"
+            type="text"
+            name="name_s"
+            placeholder="Ime i prezime"
+            onChange={(e) => {
+              hideCanvas(e);
+              handleInput(e);
+              handleProgress(e);
+            }}
+            maxLength="30"
+            pattern={defaultPattern}
+            flags="u"
+          />
+          <input
+            id="address_s"
+            type="text"
+            name="adress_s"
+            placeholder="Adresa"
+            onChange={(e) => {
+              hideCanvas(e);
+              handleInput(e);
+              handleProgress(e);
+            }}
+            maxLength="27"
+            pattern={defaultPattern}
+            flags="u"
+          />
           <div className="side-by-side">
-            <input id="zip_s" className="zip" type="text" name="zip_s" placeholder="Po. br." onChange={hideCanvas} />
-            <input id="city_s" type="text" name="city_s" placeholder="Grad" onChange={hideCanvas} />
+            <input
+              id="zip_s"
+              className="zip"
+              type="text"
+              name="zip_s"
+              placeholder="Po. br."
+              onChange={(e) => {
+                hideCanvas(e);
+                handleInput(e);
+                handleProgress(e);
+              }}
+              maxLength="5"
+              pattern="^[0-9]{5}$"
+            />
+            <input
+              id="city_s"
+              type="text"
+              name="city_s"
+              placeholder="Grad"
+              onChange={(e) => {
+                hideCanvas(e);
+                handleInput(e);
+                handleProgress(e);
+              }}
+              maxLength="21"
+              pattern={defaultPattern}
+              flags="u"
+            />
           </div>
           <input type="button" name="previous" className="disabled previous action-button" value="Natrag" disabled="" />
           <input
@@ -299,18 +563,30 @@ function App() {
             type="text"
             name="name_r"
             placeholder="Ime i prezime"
-            onChange={hideCanvas}
+            onChange={(e) => {
+              hideCanvas(e);
+              handleInput(e);
+              handleProgress(e);
+            }}
+            maxLength="25"
             required
-            pattern="^[^<>%$]+$"
+            pattern={defaultPattern}
+            flags="u"
           />
           <input
             id="address_r"
             type="text"
             name="adress_r"
             placeholder="Adresa"
-            onChange={hideCanvas}
+            onChange={(e) => {
+              hideCanvas(e);
+              handleInput(e);
+              handleProgress(e);
+            }}
+            maxLength="25"
             required
-            pattern="^[^<>%$]+$"
+            pattern={defaultPattern}
+            flags="u"
           />
           <div className="side-by-side">
             <input
@@ -319,7 +595,12 @@ function App() {
               type="text"
               name="zip_r"
               placeholder="Po. br."
-              onChange={hideCanvas}
+              onChange={(e) => {
+                hideCanvas(e);
+                handleInput(e);
+                handleProgress(e);
+              }}
+              maxLength="5"
               required
               pattern="^[0-9]{5}$"
             />
@@ -328,9 +609,15 @@ function App() {
               type="text"
               name="city_r"
               placeholder="Grad"
-              onChange={hideCanvas}
+              onChange={(e) => {
+                hideCanvas(e);
+                handleInput(e);
+                handleProgress(e);
+              }}
+              maxLength="21"
               required
-              pattern="^[^<>%$]+$"
+              pattern={defaultPattern}
+              flags="u"
             />
           </div>
           <input
@@ -353,9 +640,14 @@ function App() {
               className="bold"
               placeholder="Iznos"
               value={number || ""}
-              onChange={handleChange}
+              onChange={(e) => {
+                hideCanvas(e);
+                handleChange(e);
+                handleProgress(e);
+              }}
               required
-              pattern="^[0-9\.\,]+$"
+              pattern="^[0-9.,]+$"
+              maxLength="19"
             />
             <input
               id="currency"
@@ -363,9 +655,14 @@ function App() {
               name="currency"
               defaultValue="EUR"
               placeholder="Valuta"
-              onChange={hideCanvas}
+              onChange={(e) => {
+                hideCanvas(e);
+                handleCurrency(e);
+                handleProgress(e);
+              }}
               required
-              pattern="^([eE][uU][rR])|([hH][rR][kK])$"
+              pattern="^([a-zA-Z]{3})$"
+              maxLength="3"
             />
           </div>
           <div className="side-by-side">
@@ -374,10 +671,14 @@ function App() {
               type="text"
               name="IBAN"
               placeholder="IBAN"
-              style={inputStyle("isIBANValid")}
-              onChange={handleIBAN}
+              onChange={(e) => {
+                hideCanvas(e);
+                handleIBAN(e);
+                handleProgress(e);
+              }}
               required
               pattern="^([hH][rR])([0-9]{19})$"
+              maxLength="21"
             />
             <input
               id="code"
@@ -385,8 +686,13 @@ function App() {
               name="code"
               placeholder="Šifra"
               defaultValue={selectedKey || "COST"}
-              onChange={hideCanvas}
+              onChange={(e) => {
+                hideCanvas(e);
+                handleCode(e);
+                handleProgress(e);
+              }}
               pattern="^[a-zA-Z]{4}$"
+              maxLength="4"
             />
           </div>
           <div className="side-by-side">
@@ -396,25 +702,42 @@ function App() {
               name="model"
               defaultValue="HR00"
               placeholder="Model"
-              onChange={hideCanvas}
+              onChange={(e) => {
+                hideCanvas(e);
+                handleInput(e);
+                handleProgress(e);
+              }}
               pattern="^([hH][rR])([0-9]{2})$"
+              maxLength="4"
             />
             <input
               id="c2n"
               type="text"
               name="c2n"
               placeholder="Poziv na broj"
-              onChange={hideCanvas}
-              pattern="^([0-9\-\s]+)$"
+              onChange={(e) => {
+                hideCanvas(e);
+                handleInput(e);
+                handleProgress(e);
+              }}
+              pattern={defaultPattern}
+              flags="u"
+              maxLength="22"
             />
           </div>
           <textarea
             id="desc"
             name="desc"
             placeholder="Opis plaćanja"
-            onChange={hideCanvas}
+            onChange={(e) => {
+              hideCanvas(e);
+              handleDesc(e);
+              handleProgress(e);
+            }}
             required
-            pattern="^[^<>%$]+$"
+            pattern={defaultPattern}
+            flags="u"
+            maxLength="35"
           ></textarea>
           <input
             type="button"
@@ -424,7 +747,7 @@ function App() {
             onClick={handlePrevious}
           />
           <a className="submit action-button" target="_top" onClick={generateBarcode}>
-            GENERIRAJ
+            PRIKAŽI
           </a>
         </fieldset>
       </form>
